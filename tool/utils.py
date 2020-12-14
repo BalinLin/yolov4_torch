@@ -320,7 +320,7 @@ def draw_bbox(image, bboxes, class_names=None, show_label=True):
     
     for i, bbox in enumerate(bboxes):
         bbox[0] = int(bbox[0] * image_w)
-        bbox[1]= int(bbox[1] * image_h)
+        bbox[1] = int(bbox[1] * image_h)
         bbox[2] = int(bbox[2] * image_w)
         bbox[3] = int(bbox[3] * image_h)        
         coor = np.array(bbox[:4], dtype=np.int32)
