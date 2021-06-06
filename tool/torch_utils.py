@@ -10,7 +10,7 @@ import itertools
 import struct  # get_image_size
 import imghdr  # get_image_size
 
-from tool import utils 
+from tool import utils
 
 
 def bbox_ious(boxes1, boxes2, x1y1x2y2=True):
@@ -60,7 +60,7 @@ def get_region_boxes(boxes_and_confs):
     # confs: [batch, num1 + num2 + num3, num_classes]
     boxes = torch.cat(boxes_list, dim=1)
     confs = torch.cat(confs_list, dim=1)
-        
+
     return [boxes, confs]
 
 
@@ -70,6 +70,35 @@ def convert2cpu(gpu_matrix):
 
 def convert2cpu_long(gpu_matrix):
     return torch.LongTensor(gpu_matrix.size()).copy_(gpu_matrix)
+
+def do_detect(model, img, conf_thresh, nms_thresh, use_cuda=1):
+    model.eval()
+    # t0 = time.time()
+
+    if type(img) == np.ndarray and len(img.shape) == 3:  # cv2 image
+        img = torch.from_numpy(img.transpose(2, 0, 1)).float().div(255.0).unsqueeze(0)
+    elif type(img) == np.ndarray and len(img.shape) == 4:
+        img = torch.from_numpy(img.transpose(0, 3, 1, 2)).float().div(255.0)
+    else:
+        print("unknow image type")
+        exit(-1)
+
+    if use_cuda:
+        img = img.cuda()
+    img = torch.autograd.Variable(img)
+
+    # t1 = time.time()
+
+    output = model(img)
+
+    # t2 = time.time()
+
+    # print('-----------------------------------')
+    # print('           Preprocess : %f' % (t1 - t0))
+    # print('      Model Inference : %f' % (t2 - t1))
+    # print('-----------------------------------')
+
+    return utils.post_processing(img, conf_thresh, nms_thresh, output)
 
 
 def do_detect_ye(model, model2 , img, img2 , conf_thresh, nms_thresh, use_cuda=1):
@@ -86,8 +115,8 @@ def do_detect_ye(model, model2 , img, img2 , conf_thresh, nms_thresh, use_cuda=1
     if use_cuda:
         img = img.cuda()
     img = torch.autograd.Variable(img)
-    
-  ####2####  
+
+  ####2####
     if type(img2) == np.ndarray and len(img2.shape) == 3:  # cv2 image
         img2 = torch.from_numpy(img2.transpose(2, 0, 1)).float().div(255.0).unsqueeze(0)
     elif type(img2) == np.ndarray and len(img2.shape) == 4:

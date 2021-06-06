@@ -22,7 +22,7 @@ def softmax(x):
 
 
 def bbox_iou(box1, box2, x1y1x2y2=True):
-    
+
     # print('iou box1:', box1)
     # print('iou box2:', box2)
 
@@ -93,7 +93,7 @@ def nms_cpu(boxes, confs, nms_thresh=0.5, min_mode=False):
 
         inds = np.where(over <= nms_thresh)[0]
         order = order[inds + 1]
-    
+
     return np.array(keep)
 
 
@@ -197,7 +197,7 @@ def post_processing(img, conf_thresh, nms_thresh, output):
 
     bboxes_batch = []
     for i in range(box_array.shape[0]):
-       
+
         argwhere = max_conf[i] > conf_thresh
         l_box_array = box_array[i, argwhere, :]
         l_max_conf = max_conf[i, argwhere]
@@ -213,7 +213,7 @@ def post_processing(img, conf_thresh, nms_thresh, output):
             ll_max_id = l_max_id[cls_argwhere]
 
             keep = nms_cpu(ll_box_array, ll_max_conf, nms_thresh)
-            
+
             if (keep.size > 0):
                 ll_box_array = ll_box_array[keep, :]
                 ll_max_conf = ll_max_conf[keep]
@@ -221,7 +221,7 @@ def post_processing(img, conf_thresh, nms_thresh, output):
 
                 for k in range(ll_box_array.shape[0]):
                     bboxes.append([ll_box_array[k, 0], ll_box_array[k, 1], ll_box_array[k, 2], ll_box_array[k, 3], ll_max_conf[k], ll_max_conf[k], ll_max_id[k]])
-        
+
         bboxes_batch.append(bboxes)
 
     t3 = time.time()
@@ -231,11 +231,11 @@ def post_processing(img, conf_thresh, nms_thresh, output):
     print('                  nms : %f' % (t3 - t2))
     print('Post processing total : %f' % (t3 - t1))
     print('-----------------------------------')
-    
+
     return bboxes_batch
 
 def post_processing_ye(img, img2, conf_thresh, nms_thresh, output, output2):
-    
+
 
     # anchors = [12, 16, 19, 36, 40, 28, 36, 75, 76, 55, 72, 146, 142, 110, 192, 243, 459, 401]
     # num_anchors = 9
@@ -259,22 +259,22 @@ def post_processing_ye(img, img2, conf_thresh, nms_thresh, output, output2):
         confs2 = confs2.cpu().detach().numpy()
 
     num_classes = confs.shape[2]
-    
+
     box_array = box_array[:, :, 0]
     box_array2 = box_array2[:, :, 0]
    # [batch, num, num_classes] --> [batch, num]
-    
+
     box_array_ye=np.append(box_array,box_array2,axis=1)
     confs = np.append(confs, confs2,axis=1)
-    
+
     max_conf = np.max(confs, axis=2)
     max_id = np.argmax(confs, axis=2)
-    
+
     t2 = time.time()
 
     bboxes_batch = []
     for i in range(box_array_ye.shape[0]):
-       
+
         argwhere = max_conf[i] > conf_thresh
         l_box_array = box_array_ye[i, argwhere, :]
         l_max_conf = max_conf[i, argwhere]
@@ -290,7 +290,7 @@ def post_processing_ye(img, img2, conf_thresh, nms_thresh, output, output2):
             ll_max_id = l_max_id[cls_argwhere]
 
             keep = nms_cpu(ll_box_array, ll_max_conf, nms_thresh)
-            
+
             if (keep.size > 0):
                 ll_box_array = ll_box_array[keep, :]
                 ll_max_conf = ll_max_conf[keep]
@@ -298,9 +298,9 @@ def post_processing_ye(img, img2, conf_thresh, nms_thresh, output, output2):
 
                 for k in range(ll_box_array.shape[0]):
                     bboxes.append([ll_box_array[k, 0], ll_box_array[k, 1], ll_box_array[k, 2], ll_box_array[k, 3], ll_max_conf[k], ll_max_conf[k], ll_max_id[k]])
-        
+
         bboxes_batch.append(bboxes)
-    
+
     return bboxes_batch
 
 def draw_bbox(image, bboxes, class_names=None, show_label=True):
@@ -317,12 +317,12 @@ def draw_bbox(image, bboxes, class_names=None, show_label=True):
     random.shuffle(colors)
     random.seed(None)
 
-    
+
     for i, bbox in enumerate(bboxes):
         bbox[0] = int(bbox[0] * image_w)
         bbox[1] = int(bbox[1] * image_h)
         bbox[2] = int(bbox[2] * image_w)
-        bbox[3] = int(bbox[3] * image_h)        
+        bbox[3] = int(bbox[3] * image_h)
         coor = np.array(bbox[:4], dtype=np.int32)
         fontScale = 0.5
         score = bbox[4]
@@ -330,6 +330,8 @@ def draw_bbox(image, bboxes, class_names=None, show_label=True):
         bbox_color = colors[class_ind]
         bbox_thick = int(0.6 * (image_h + image_w) / 600)
         c1, c2 = (coor[0], coor[1]), (coor[2], coor[3])
+        if image.shape[2] == 1:
+            bbox_color = (255, 255, 255)
         cv2.rectangle(image, c1, c2, bbox_color, bbox_thick)
         if show_label:
             bbox_mess = '%s: %.2f' % (class_names[class_ind], score)
